@@ -1,0 +1,46 @@
+{
+	"name": "boilerplate",
+	"description": "",
+	"version": "0.0.0",
+	"keywords": [],
+	"author": "Julius Tens <mail@juliustens.de>",
+	"homepage": "https://github.com/juliuste/boilerplate",
+	"repository": "juliuste/boilerplate",
+	"bugs": "https://github.com/juliuste/boilerplate/issues",
+	"main": "./index.js",
+	"private": true,
+	"dependencies": {
+		"@turf/turf": "^5.1.6",
+		"csv-parse": "^2.0.0",
+		"floodgate": "^0.1.2",
+		"got": "^8.0.1",
+		"lodash.replace": "^4.1.4",
+		"lodash.sortby": "^4.7.0",
+		"lodash.split": "^4.4.2",
+		"lodash.sumby": "^4.6.0",
+		"moment": "^2.19.4",
+		"ndjson": "^1.5.0",
+		"p-timeout": "^2.0.1",
+		"pify": "^3.0.0",
+		"prompt-promise": "^1.0.3",
+		"say": "^0.14.0",
+		"slope-angle": "^0.0.3",
+		"through2-filter": "^2.0.0",
+		"wikidata-sdk": "^5.6.1",
+		"wikijs": "^4.5.0",
+		"wikimedia-page-views": "^0.0.0",
+		"wikipedia-location-search": "^0.0.0"
+	},
+	"devDependencies": {
+		"tape": "^4.7.0"
+	},
+	"scripts": {
+		"test": "node test.js",
+		"prepare": "npm test",
+		"sort": "cat wifi.csv | tail -n +2 | sort --field-separator=';' --key=1,2 > sorted.csv"
+	},
+	"engines": {
+		"node": ">=8"
+	},
+	"license": "ISC"
+}
