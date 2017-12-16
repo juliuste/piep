@@ -7,26 +7,58 @@ const position = require('./lib/position')
 const timeout = require('p-timeout')
 const prompt = require('prompt-promise')
 
-const interval = 5*1000
+const interval = 15*1000
 
 const vectorAngle = (x1, y1, x2, y2) =>
     Math.acos((x1*x2+y1*y2) / (Math.sqrt(Math.pow(x1, 2)+Math.pow(y1, 2)) * Math.sqrt(Math.pow(x2, 2)+Math.pow(y2, 2))))
 
 const main = () => {
-    const locationStream = position('./train3.ndjson')
+    const locationStream = position('./train6.ndjson')
     let isReading = false
     let lastPage
     let location
     let lastLocation = {coordinates: {longitude: 50, latitude: -50}}
 
+    let networkWarning = false
+
+    // delay
+    let lastDelay
+    let delay = 0
+
     const run = async () => {
+
+        // sights
         const pageNearby = await nearby(location.coordinates)
-        console.log(pageNearby.title)
         const text = await wikitext(pageNearby.title)//.catch(() => null)
-        console.log(text.summary)
         if(text && pageNearby.title !== lastPage && !isReading && pageNearby.score > 0){
+            // delay
+            let delayText = ''
+            if(delay && (!lastDelay || Math.abs(lastDelay-delay) >= 10)){
+                delayText = 'Unser Zug hat leider '+Math.round(delay)+' Minuten Verspätung... [[slnc 5000]]'
+                console.log('Unser Zug hat leider '+Math.round(delay)+' Minuten Verspätung...')
+                lastDelay = delay
+            }
+            delay += 25 + Math.random()*10
+
+            // network
+            let networkText = ''
+            if(networkWarning){
+                // mockup, simply replace with logic from routesNearTunnel.js, which already solves this
+                const tunnelLength = 10
+                const tunnelDistance = 15
+                networkText = 'Vorsicht, Netzabdeckung: Tunnel in circa '+tunnelDistance+' Minuten, die Durchfahrt wird etwa '+tunnelLength+' Minuten dauern. [[slnc 5000]]'
+                console.log('Vorsicht, Netzabdeckung: Tunnel in circa '+tunnelDistance+' Minuten, die Durchfahrt wird etwa '+tunnelLength+' Minuten dauern.')
+            }
+            if(delay > 40){
+                networkWarning = true
+            }
+
+            console.log('Title: ', pageNearby.title)
+            console.log('Text: ', text.summary)
+
             lastPage = pageNearby.title
             isReading = true
+
 
             let dir = ''
 
@@ -51,21 +83,23 @@ const main = () => {
 
                 let direction
 
-                console.log(angle)
+                const clock = Math.round((angle * (-1)/360 + 0.5)*12) || 0 // todo, NaN
 
+                if(clock > 0 && clock < 6) direction = 'Auf der rechten Seite: '
+                else if(clock > 6 && clock < 12) direction = 'Auf der linken Seite: '
+                else if(clock === 0 || clock === 12) direction = 'Vor uns: '
+                else direction = 'Hinter uns: '
 
-                const clock = Math.round((angle * (-1)/360 + 0.5)*12) // todo
+                console.log('Direction: '+clock+'/12\n')
 
-                if(clock > 0 && clock < 6) direction = 'rechts'
-                else if(clock > 6 && clock < 12) direction = 'links'
-                else if(clock === 0 || clock === 12) direction = 'vor uns'
-                else direction = 'hinter uns'
+                // dir = `Auf ${clock} Uhr, ${direction}: `
+                dir = direction
 
-                dir = `Auf ${clock} Uhr, ${direction}: `
             }
 
-            const said = await say(dir+text.summary)
-                .then(() => say('Um mehr zu hören bitte das Gerät schütteln!'))
+
+            const said = await say(delayText+networkText+dir+text.summary)
+                .then(() => say('Für mehr Informationen bitte das Gerät schütteln!'))
                 .then(() => timeout(prompt(''), 5000))
                 .then(() => say(text.tail))
                 .catch(() => null)
